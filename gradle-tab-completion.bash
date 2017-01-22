@@ -1,5 +1,10 @@
 export CASHE_FILE="$HOME/.gradle/.gradle_completion_cash"
 
+#TODO:
+# - commandline flags support https://gist.github.com/Ea87/46401a96df31cd208a87
+# - gitbash & cygwin support
+# - module support
+
 getGradleCommand() {
     local gradle_cmd='gradle'
     if [[ -x ./gradlew ]]; then
@@ -78,7 +83,7 @@ writeTasksToCache() {
             local i=$((i+1))
             if [[ $cacheLine == "$cwd"* ]]; then
                 #overwrite the line
-                sed -i '' "${i}s:.*:${newLine}:" $CASHE_FILE
+                sed -i '' "${i}s;.*;${newLine};" $CASHE_FILE
                 return 0
             fi
         done <$CASHE_FILE
@@ -88,17 +93,25 @@ writeTasksToCache() {
 }
 
 getGradleChangesHash() {
-    if hash md5 2>/dev/null; then
+    if hash git 2>/dev/null; then
+        find . -name build.gradle 2> /dev/null \
+            | xargs cat \
+            | git hash-object --stdin
+    elif hash md5 2>/dev/null; then
         # use md5 for hashing (Mac OS X)
-        find . -name build.gradle -exec md5 {} \; | md5
+        find . -name build.gradle 2> /dev/null \
+            | xargs cat \
+            | md5
     else
         # use md5sum for hashing (Linux)
-        find . -name build.gradle -exec md5sum {} \; | md5sum | cut -f1 -d' '
+        find . -name build.gradle 2> /dev/null \
+            | xargs cat \
+            | md5sum \
+            | cut -f1 -d' '
     fi
 }
 
 _gradle() {
-    local cur=${COMP_WORDS[COMP_CWORD]}
     local gradle_cmd=$(getGradleCommand)
 
     local commands=$(getGradleTasksFromCache)
@@ -108,8 +121,17 @@ _gradle() {
         writeTasksToCache $commands
     fi
 
-    COMPREPLY=( $(compgen -W "${commands}" -- $cur) )
-}
+    # COMPREPLY=( $(compgen -W "${commands}" -- $cur) )
+
+    COMPREPLY=()
+    local cur=${COMP_WORDS[COMP_CWORD]}
+    colonprefixes=${cur%"${cur##*:}"}
+    COMPREPLY=( $(compgen -W "${commands}"  -- $cur))
+    local i=${#COMPREPLY[*]}
+    while [ $((--i)) -ge 0 ]; do
+        COMPREPLY[$i]=${COMPREPLY[$i]#"$colonprefixes"}
+    done
+} &&
 complete -F _gradle gradle
 complete -F _gradle gradlew
 complete -F _gradle ./gradlew
