@@ -15,8 +15,7 @@ getGradleCommand() {
 
 requestTasksFromGradle() {
     local gradle_cmd=$(getGradleCommand)
-    # commands=$($gradle_cmd tasks --console plain --all --quiet --offline | sed -n s/\ -\ .*//p | tr '\n' ' ')
-    local taskCommandOutput=$($gradle_cmd tasks --console plain --all --quiet --offline)
+    local taskCommandOutput=$($gradle_cmd tasks --console plain --quiet --offline)
 
     # This mess makes sure all tasks are caught, even without a description,
     # but none of the other stuff. To prevent the Rules from being added we
@@ -39,6 +38,29 @@ requestTasksFromGradle() {
     echo $commands
 }
 
+processGradleTaskOutput() {
+    local commands=''
+    local currLine=''
+    local underHeading=0
+    while read -r nextLine || [[ -n $nextLine ]]; do
+        if [[ $nextLine == "--"* ]]; then
+            underHeading=1
+            currLine=''
+        else
+            if [[ $nextLine == '' ]]; then
+                underHeading=0
+            fi
+            if [ "$underHeading" == 1 ] && [ "$currLine" != '' ]; then
+                commands="$commands $(trim ${currLine%\ -\ *})"
+            fi
+            currLine=$nextLine
+        fi
+    done <<< "$@"
+    commands="$commands $(trim ${currLine%\ -\ *})" #we need to add it once more for the last line
+
+    echo $commands
+}
+
 #credit: http://stackoverflow.com/a/33248547/3968618
 trim() {
     local s2 s="$*"
@@ -56,7 +78,7 @@ getGradleTasksFromCache() {
 
         # Return the tasks only if the cache is up to date
         currentHash=$(getGradleChangesHash)
-        if [ ${resultArray[1]} == $currentHash ]; then
+        if [[ ${resultArray[1]} == $currentHash ]]; then
             echo ${resultArray[2]}
         fi
     fi
@@ -83,7 +105,7 @@ writeTasksToCache() {
             local i=$((i+1))
             if [[ $cacheLine == "$cwd"* ]]; then
                 #overwrite the line
-                sed -i '' "${i}s;.*;${newLine};" $CASHE_FILE
+                sed --in-place='' "${i}s#.*#${newLine}#" $CASHE_FILE
                 return 0
             fi
         done <$CASHE_FILE

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-LOCAL_GRADLE_REPO="/Users/leonmoll/repos/java/refactoring-spikes/first-example_movie-rental/"
+LOCAL_GRADLE_REPO="/home/lemo7242/repos/2pmib/neospeech"
 
 setup() {
     ORIG_WD=$(pwd)
@@ -44,19 +44,39 @@ test_getGradleCommand_ShouldSupportLocalGradleWrapper() {
 #     result=$(requestTasksFromGradle)
 
 
-#     exp='justSomeTask assemble build buildDependents buildNeeded classes compileJava processResources clean jar testClasses compileTestJava processTestResources init wrapper javadoc buildEnvironment components dependencies dependencyInsight help model projects properties tasks check test syntastic install justSomeTask'
-#     # exp='assemble build buildDependents buildNeeded classes clean j9Classes jar testClasses init wrapper javadoc buildEnvironment components dependencies dependencyInsight dependentComponents help model projects properties tasks cleanEclipse cleanIdea eclipse idea uploadArchives check test deploy deployDownloadedArtifacts deploySpeechAdi deploySpeechRevo downloadArtifactsAdi_AS downloadArtifactsAdi_CLU22 downloadArtifactsAdi_EU downloadArtifactsAdi_NAR downloadArtifactsRevo_AS downloadArtifactsRevo_CLU22 downloadArtifactsRevo_EU downloadArtifactsRevo_NAR removeSpeechJars'
+#     # exp='justSomeTask assemble build buildDependents buildNeeded classes compileJava processResources clean jar testClasses compileTestJava processTestResources init wrapper javadoc buildEnvironment components dependencies dependencyInsight help model projects properties tasks check test syntastic install justSomeTask'
+#     exp='assemble build buildDependents buildNeeded classes clean j9Classes jar testClasses init wrapper javadoc buildEnvironment components dependencies dependencyInsight dependentComponents help model projects properties tasks cleanEclipse cleanIdea eclipse idea uploadArchives check test deploy deployDownloadedArtifacts deploySpeechAdi deploySpeechRevo downloadArtifactsAdi_AS downloadArtifactsAdi_CLU22 downloadArtifactsAdi_EU downloadArtifactsAdi_NAR downloadArtifactsRevo_AS downloadArtifactsRevo_CLU22 downloadArtifactsRevo_EU downloadArtifactsRevo_NAR removeSpeechJars'
 #     if [[ $result != $exp ]]; then
 #         fail "expected: '$exp'\n    got:      '$result'"
 #     fi
 # }
 
+test_processGradleTaskOutput_withSimpleTasks() {
+    result=$(processGradleTaskOutput "$(cat ./t/task-output-small.log)")
+
+    exp='assemble build buildDependents buildNeeded classes clean j9Classes jar testClasses'
+    if [[ $result != $exp ]]; then
+        fail "expected: '$exp'\n    got: '$result'"
+    fi
+}
+
+test_processGradleTaskOutput_withComplexTasks() {
+    result=$(processGradleTaskOutput "$(cat ./t/task-output.log)")
+
+    exp='assemble build buildDependents buildNeeded classes clean j9Classes jar init buildEnvironment components dependencies dependencyInsight dependentComponents help model projects properties cleanEclipse cleanIdea eclipse check backport compressTests deploy deployDownloadedArtifacts deploySpeechAdi deploySpeechRevo dialogTests downloadArtifactsAdi_AS downloadArtifactsAdi_CLU22 downloadArtifactsAdi_EU downloadArtifactsAdi_NAR downloadArtifactsRevo_AS downloadArtifactsRevo_CLU22 downloadArtifactsRevo_EU downloadArtifactsRevo_NAR Pattern: clean<TaskName>: Cleans the output files of a task. Pattern: build<ConfigurationName>: Assembles the artifacts of a configuration.'
+    # exp='assemble build buildDependents buildNeeded classes clean j9Classes jar testClasses'
+    if [[ $result != $exp ]]; then
+        fail "expected: '$exp'\n    got: '$result'"
+    fi
+}
+
 test_readCacheForCwd() {
     cd $LOCAL_GRADLE_REPO
 
     local cwd=$(pwd)
-    # local hashString=$(echo "someString" | md5sum | cut -f1 -d' ')
-    local hashString=$(echo "someString" | md5)
+    local hashString=$( find . -name build.gradle 2> /dev/null \
+            | xargs cat \
+            | git hash-object --stdin)
     local commands="tasks build etc"
     echo "$cwd|$hashString|$commands" > $CASHE_FILE
     echo "./other/dir|$hashString|$commands" >> $CASHE_FILE
@@ -99,7 +119,7 @@ test_getGradleTasksFromCache() {
 test_getGradleTasksFromCache_shouldReturnEmptyForCacheMiss() {
     makeCacheWithTasks "testA testB btest"
 
-    touch ./build.gradle # changing the repo, invalidating the cache
+    echo "//something" >> ./build.gradle # changing the repo, invalidating the cache
     result=$(getGradleTasksFromCache)
 
     if [[ $result != "" ]]; then
@@ -144,7 +164,8 @@ test_writeTasksToCache_shouldOverwriteOldCacheForPath() {
 
 makeCacheWithTasks() {
     local cwd=$(pwd)
-    # local hashString=$(echo "someString" | md5sum | cut -f1 -d' ')
-    local hashString=$(echo "someString" | md5)
+    local hashString=$( find . -name build.gradle 2> /dev/null \
+            | xargs cat \
+            | git hash-object --stdin)
     echo "$cwd|$hashString|$@" > $CASHE_FILE
 }
