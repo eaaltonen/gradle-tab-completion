@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-LOCAL_GRADLE_REPO="/home/lemo7242/repos/2pmib/neospeech"
+LOCAL_GRADLE_REPO="/Users/leonmoll/repos/java/refactoring-spikes/first-example_movie-rental/"
 
 setup() {
     ORIG_WD=$(pwd)
@@ -63,8 +63,10 @@ test_processGradleTaskOutput_withSimpleTasks() {
 test_processGradleTaskOutput_withComplexTasks() {
     result=$(processGradleTaskOutput "$(cat ./t/task-output.log)")
 
-    exp='assemble build buildDependents buildNeeded classes clean j9Classes jar init buildEnvironment components dependencies dependencyInsight dependentComponents help model projects properties cleanEclipse cleanIdea eclipse check backport compressTests deploy deployDownloadedArtifacts deploySpeechAdi deploySpeechRevo dialogTests downloadArtifactsAdi_AS downloadArtifactsAdi_CLU22 downloadArtifactsAdi_EU downloadArtifactsAdi_NAR downloadArtifactsRevo_AS downloadArtifactsRevo_CLU22 downloadArtifactsRevo_EU downloadArtifactsRevo_NAR Pattern: clean<TaskName>: Cleans the output files of a task. Pattern: build<ConfigurationName>: Assembles the artifacts of a configuration.'
+
+    # exp='assemble build buildDependents buildNeeded classes clean j9Classes jar init buildEnvironment components dependencies dependencyInsight dependentComponents help model projects properties cleanEclipse cleanIdea eclipse check backport compressTests deploy deployDownloadedArtifacts deploySpeechAdi deploySpeechRevo dialogTests downloadArtifactsAdi_AS downloadArtifactsAdi_CLU22 downloadArtifactsAdi_EU downloadArtifactsAdi_NAR downloadArtifactsRevo_AS downloadArtifactsRevo_CLU22 downloadArtifactsRevo_EU downloadArtifactsRevo_NAR'
     # exp='assemble build buildDependents buildNeeded classes clean j9Classes jar testClasses'
+    exp='assemble build buildDependents buildNeeded classes clean j9Classes jar testClasses init wrapper javadoc buildEnvironment components dependencies dependencyInsight dependentComponents help model projects properties tasks cleanEclipse cleanIdea eclipse idea uploadArchives check test backport compressTests deploy deployDownloadedArtifacts deploySpeechAdi deploySpeechRevo dialogTests'
     if [[ $result != $exp ]]; then
         fail "expected: '$exp'\n    got: '$result'"
     fi

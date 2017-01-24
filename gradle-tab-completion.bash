@@ -16,47 +16,28 @@ getGradleCommand() {
 requestTasksFromGradle() {
     local gradle_cmd=$(getGradleCommand)
     local taskCommandOutput=$($gradle_cmd tasks --console plain --quiet --offline)
-
-    # This mess makes sure all tasks are caught, even without a description,
-    # but none of the other stuff. To prevent the Rules from being added we
-    # break after the 'Rules' heading.
-    local commands=''
-    local currLine=''
-    while read nextLine || [[ -n $nextLine ]]; do
-        if [[ $nextLine == "--"* ]]; then
-            if [[ $currLine == "Rules" ]]; then
-                break
-            fi
-            currLine=''
-        else
-            if [[ $currLine != '' ]]; then
-                commands="$commands $(trim ${currLine%\ -\ *})"
-            fi
-            currLine=$nextLine
-        fi
-    done <<< $(printf "$taskCommandOutput")
-    echo $commands
+    parseGradleTaskOutput $taskCommandOutput
 }
 
-processGradleTaskOutput() {
+parseGradleTaskOutput() {
     local commands=''
-    local currLine=''
-    local underHeading=0
-    while read -r nextLine || [[ -n $nextLine ]]; do
-        if [[ $nextLine == "--"* ]]; then
-            underHeading=1
-            currLine=''
+    local readingTasks=0
+    local lastLineEmpty=1 # The command output has a title that starts with a line of dashes
+    while read -r line || [[ -n $line ]]; do
+        if [[ $line == "--"* && $lastLineEmpty == 0 ]]; then
+            readingTasks=1
+        elif [[ $line == '' ]]; then
+            readingTasks=0
+            lastLineEmpty=1
         else
-            if [[ $nextLine == '' ]]; then
-                underHeading=0
+            lastLineEmpty=0
+            if [[ $readingTasks == 1 ]]; then
+                if [[ $line != "Pattern:"* ]]; then
+                    commands="$commands $(trim ${line%\ -\ *})"
+                fi
             fi
-            if [ "$underHeading" == 1 ] && [ "$currLine" != '' ]; then
-                commands="$commands $(trim ${currLine%\ -\ *})"
-            fi
-            currLine=$nextLine
         fi
     done <<< "$@"
-    commands="$commands $(trim ${currLine%\ -\ *})" #we need to add it once more for the last line
 
     echo $commands
 }
@@ -105,7 +86,7 @@ writeTasksToCache() {
             local i=$((i+1))
             if [[ $cacheLine == "$cwd"* ]]; then
                 #overwrite the line
-                sed --in-place='' "${i}s#.*#${newLine}#" $CASHE_FILE
+                sed -i '' "${i}s#.*#${newLine}#" $CASHE_FILE
                 return 0
             fi
         done <$CASHE_FILE

@@ -63,15 +63,6 @@ deployDownloadedArtifacts - Deploys the downloaded artifacts to the target
 deploySpeechAdi - Builds all jars for the AppSpeechCommon* and AppSpeechAdi* projects and copies them to the target
 deploySpeechRevo - Builds all jars for the AppSpeechCommon* and AppSpeechRevo* projects and copies them to the target
 dialogTests
-downloadArtifactsAdi_AS - Download Adi AS hmi_jars from Jenkins.
-downloadArtifactsAdi_CLU22 - Download Adi CLU22 hmi_jars from Jenkins.
-downloadArtifactsAdi_EU - Download Adi EU hmi_jars from Jenkins.
-downloadArtifactsAdi_NAR - Download Adi NAR hmi_jars from Jenkins.
-downloadArtifactsRevo_AS - Download Revo AS hmi_jars from Jenkins.
-downloadArtifactsRevo_CLU22 - Download Revo CLU22 hmi_jars from Jenkins.
-downloadArtifactsRevo_EU - Download Revo EU hmi_jars from Jenkins.
-downloadArtifactsRevo_NAR - Download Revo NAR hmi_jars from Jenkins.
-removeSpeechJars - Temp task, to remove the speech jars with inconsistent names.
 
 Rules
 -----
