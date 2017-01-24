@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-LOCAL_GRADLE_REPO="/Users/leonmoll/repos/java/refactoring-spikes/first-example_movie-rental/"
+LOCAL_GRADLE_REPO=""
 
 setup() {
     ORIG_WD=$(pwd)
@@ -16,7 +16,7 @@ teardown() {
     # rm -f $HOME/.gradle/bash_completion.cache
 }
 
-test_getGradleCommand_ShouldDefaultToGradleInstallation() {
+test__should_support_default_gradle_installation() {
 
     local result=$(getGradleCommand)
 
@@ -26,7 +26,7 @@ test_getGradleCommand_ShouldDefaultToGradleInstallation() {
     fi
 }
 
-test_getGradleCommand_ShouldSupportLocalGradleWrapper() {
+test__should_support_gradle_wrapper() {
     touch ./gradlew
     chmod +x ./gradlew
 
@@ -38,21 +38,19 @@ test_getGradleCommand_ShouldSupportLocalGradleWrapper() {
     fi
 }
 
-# test_getGradleTasks() {
-#     cd $LOCAL_GRADLE_REPO
+test__should_allow_requesting_tasks_from_gradle() {
+    cd $LOCAL_GRADLE_REPO
 
-#     result=$(requestTasksFromGradle)
+    result=$(requestTasksFromGradle)
 
+    exp='assemble build buildDependents buildNeeded classes clean j9Classes jar testClasses init wrapper javadoc buildEnvironment components dependencies dependencyInsight dependentComponents help model projects properties tasks cleanEclipse cleanIdea eclipse idea uploadArchives check test backport compressTests deploy deployDownloadedArtifacts deploySpeechAdi deploySpeechRevo dialogTests downloadArtifactsAdi_AS downloadArtifactsAdi_CLU22 downloadArtifactsAdi_EU downloadArtifactsAdi_NAR downloadArtifactsRevo_AS downloadArtifactsRevo_CLU22 downloadArtifactsRevo_EU downloadArtifactsRevo_NAR removeSpeechJars'
+    if [[ $result != $exp ]]; then
+        fail "expected: '$exp'\n    got:      '$result'"
+    fi
+}
 
-#     # exp='justSomeTask assemble build buildDependents buildNeeded classes compileJava processResources clean jar testClasses compileTestJava processTestResources init wrapper javadoc buildEnvironment components dependencies dependencyInsight help model projects properties tasks check test syntastic install justSomeTask'
-#     exp='assemble build buildDependents buildNeeded classes clean j9Classes jar testClasses init wrapper javadoc buildEnvironment components dependencies dependencyInsight dependentComponents help model projects properties tasks cleanEclipse cleanIdea eclipse idea uploadArchives check test deploy deployDownloadedArtifacts deploySpeechAdi deploySpeechRevo downloadArtifactsAdi_AS downloadArtifactsAdi_CLU22 downloadArtifactsAdi_EU downloadArtifactsAdi_NAR downloadArtifactsRevo_AS downloadArtifactsRevo_CLU22 downloadArtifactsRevo_EU downloadArtifactsRevo_NAR removeSpeechJars'
-#     if [[ $result != $exp ]]; then
-#         fail "expected: '$exp'\n    got:      '$result'"
-#     fi
-# }
-
-test_processGradleTaskOutput_withSimpleTasks() {
-    result=$(processGradleTaskOutput "$(cat ./t/task-output-small.log)")
+test__should_get_tasks_from_a_heading_in_task_output() {
+    result=$(parseGradleTaskOutput "$(cat ./t/tasks-one-heading.out)")
 
     exp='assemble build buildDependents buildNeeded classes clean j9Classes jar testClasses'
     if [[ $result != $exp ]]; then
@@ -60,12 +58,9 @@ test_processGradleTaskOutput_withSimpleTasks() {
     fi
 }
 
-test_processGradleTaskOutput_withComplexTasks() {
-    result=$(processGradleTaskOutput "$(cat ./t/task-output.log)")
+test__should_handle_multiple_headings_and_noise_in_task_output() {
+    result=$(parseGradleTaskOutput "$(cat ./t/tasks-full.out)")
 
-
-    # exp='assemble build buildDependents buildNeeded classes clean j9Classes jar init buildEnvironment components dependencies dependencyInsight dependentComponents help model projects properties cleanEclipse cleanIdea eclipse check backport compressTests deploy deployDownloadedArtifacts deploySpeechAdi deploySpeechRevo dialogTests downloadArtifactsAdi_AS downloadArtifactsAdi_CLU22 downloadArtifactsAdi_EU downloadArtifactsAdi_NAR downloadArtifactsRevo_AS downloadArtifactsRevo_CLU22 downloadArtifactsRevo_EU downloadArtifactsRevo_NAR'
-    # exp='assemble build buildDependents buildNeeded classes clean j9Classes jar testClasses'
     exp='assemble build buildDependents buildNeeded classes clean j9Classes jar testClasses init wrapper javadoc buildEnvironment components dependencies dependencyInsight dependentComponents help model projects properties tasks cleanEclipse cleanIdea eclipse idea uploadArchives check test backport compressTests deploy deployDownloadedArtifacts deploySpeechAdi deploySpeechRevo dialogTests'
     if [[ $result != $exp ]]; then
         fail "expected: '$exp'\n    got: '$result'"

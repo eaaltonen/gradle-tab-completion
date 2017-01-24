@@ -15,8 +15,9 @@ getGradleCommand() {
 
 requestTasksFromGradle() {
     local gradle_cmd=$(getGradleCommand)
+    # local taskCommandOutput=$($gradle_cmd tasks --console plain --all --quiet --offline)
     local taskCommandOutput=$($gradle_cmd tasks --console plain --quiet --offline)
-    parseGradleTaskOutput $taskCommandOutput
+    echo $(parseGradleTaskOutput "$taskCommandOutput")
 }
 
 parseGradleTaskOutput() {
@@ -86,7 +87,7 @@ writeTasksToCache() {
             local i=$((i+1))
             if [[ $cacheLine == "$cwd"* ]]; then
                 #overwrite the line
-                sed -i '' "${i}s#.*#${newLine}#" $CASHE_FILE
+                sed -i'' "${i}s#.*#${newLine}#" $CASHE_FILE
                 return 0
             fi
         done <$CASHE_FILE
