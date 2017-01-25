@@ -28,7 +28,7 @@ callEveryTest() {
         )
 
         failedTestReturned=$?
-        if [ $failedTestReturned > 0 ]; then
+        if [[ $failedTestReturned > 0 ]]; then
             ((FAILING_TESTS+=$failedTestReturned))
         fi
     done

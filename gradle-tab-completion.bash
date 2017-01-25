@@ -87,7 +87,7 @@ writeTasksToCache() {
             local i=$((i+1))
             if [[ $cacheLine == "$cwd"* ]]; then
                 #overwrite the line
-                sed -i'' "${i}s#.*#${newLine}#" $CASHE_FILE
+                sed -i '' "${i}s#.*#${newLine}#" $CASHE_FILE
                 return 0
             fi
         done <$CASHE_FILE

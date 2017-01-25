@@ -6,6 +6,11 @@ setup() {
     ORIG_WD=$(pwd)
     source ./gradle-tab-completion.bash
     CASHE_FILE="testCache"
+    if [[ $LOCAL_GRADLE_REPO == "" ]];then
+        echo INITIALISATION FAIL:
+        echo LOCAL_GRADLE_REPO not set
+        exit 1
+    fi
 }
 
 teardown() {
@@ -13,7 +18,6 @@ teardown() {
     rm -f ./gradlew
     rm -f ./build.gradle
     rm -f $CASHE_FILE
-    # rm -f $HOME/.gradle/bash_completion.cache
 }
 
 test__should_support_default_gradle_installation() {
@@ -38,7 +42,7 @@ test__should_support_gradle_wrapper() {
     fi
 }
 
-test__should_allow_requesting_tasks_from_gradle() {
+testLarge__should_allow_requesting_tasks_from_gradle() {
     cd $LOCAL_GRADLE_REPO
 
     result=$(requestTasksFromGradle)
@@ -67,32 +71,32 @@ test__should_handle_multiple_headings_and_noise_in_task_output() {
     fi
 }
 
-test_readCacheForCwd() {
-    cd $LOCAL_GRADLE_REPO
+# test_readCacheForCwd() {
+#     cd $LOCAL_GRADLE_REPO
 
-    local cwd=$(pwd)
-    local hashString=$( find . -name build.gradle 2> /dev/null \
-            | xargs cat \
-            | git hash-object --stdin)
-    local commands="tasks build etc"
-    echo "$cwd|$hashString|$commands" > $CASHE_FILE
-    echo "./other/dir|$hashString|$commands" >> $CASHE_FILE
+#     local cwd=$(pwd)
+#     local hashString=$( find . -name build.gradle 2> /dev/null \
+#             | xargs cat \
+#             | git hash-object --stdin)
+#     local commands="tasks build etc"
+#     echo "$cwd|$hashString|$commands" > $CASHE_FILE
+#     echo "./other/dir|$hashString|$commands" >> $CASHE_FILE
 
-    local result=$(readCacheForCwd)
+#     local result=$(readCacheForCwd)
 
-    IFS='|' read -ra resultArray <<< "$result"
-    if [[ $cwd != ${resultArray[0]} ]]; then
-        fail "expected '$cwd', got '${resultArray[0]}'"
-    fi
+#     IFS='|' read -ra resultArray <<< "$result"
+#     if [[ $cwd != ${resultArray[0]} ]]; then
+#         fail "expected '$cwd', got '${resultArray[0]}'"
+#     fi
 
-    if [[ $hashString != ${resultArray[1]} ]]; then
-        fail "expected '$hashString', got '${resultArray[1]}'"
-    fi
+#     if [[ $hashString != ${resultArray[1]} ]]; then
+#         fail "expected '$hashString', got '${resultArray[1]}'"
+#     fi
 
-    if [[ $commands != ${resultArray[2]} ]]; then
-        fail "expected '$cwd', got '${resultArray[2]}'"
-    fi
-}
+#     if [[ $commands != ${resultArray[2]} ]]; then
+#         fail "expected '$cwd', got '${resultArray[2]}'"
+#     fi
+# }
 
 test_readCacheForCwd_shouldReturnEmptyOnError() {
     local result=$(readCacheForCwd)
