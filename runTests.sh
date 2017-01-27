@@ -71,6 +71,17 @@ fail() {
     # exit 1
 }
 
+assertEquals() {
+    if [[ $1 != $2 ]]; then
+        maxSizeForMultiline=30
+        if [[ "${#1}" -gt $maxSizeForMultiline || ${#2} -gt $maxSizeForMultiline ]]; then
+            fail "expected: '$1'\n    got:      '$2'"
+        else
+            fail "expected '$1', got '$2'"
+        fi
+    fi
+}
+
 log() {
     if [ $VERBOSE ]; then
         echo "$1"
