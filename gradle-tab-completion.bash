@@ -86,14 +86,21 @@ writeTasksToCache() {
         while read cacheLine || [[ -n $cacheLine ]]; do
             local i=$((i+1))
             if [[ $cacheLine == "$cwd"* ]]; then
-                #overwrite the line
-                sed -i '' "${i}s#.*#${newLine}#" $CASHE_FILE
+                replaceLineNumberInFileWith $i $CASHE_FILE "$newLine"
                 return 0
             fi
-        done <$CASHE_FILE
+        done <<< $CASHE_FILE
     fi
     # If there was no file or the file did not have a cache for this dir, we add it here
     echo $newLine >> $CASHE_FILE
+}
+
+replaceLineNumberInFileWith() {
+    if echo "$(sed --version)" | grep -q "FreeBSD"; then
+        sed -i '' "${1}s#.*#$3#" $2
+    else
+        sed -i "${1}s#.*#$3#" $2
+    fi
 }
 
 getGradleChangesHash() {
@@ -125,17 +132,9 @@ _gradle() {
         writeTasksToCache $commands
     fi
 
-    # COMPREPLY=( $(compgen -W "${commands}" -- $cur) )
+    COMPREPLY=( $(compgen -W "${commands}" -- $cur) )
+}
 
-    COMPREPLY=()
-    local cur=${COMP_WORDS[COMP_CWORD]}
-    colonprefixes=${cur%"${cur##*:}"}
-    COMPREPLY=( $(compgen -W "${commands}"  -- $cur))
-    local i=${#COMPREPLY[*]}
-    while [ $((--i)) -ge 0 ]; do
-        COMPREPLY[$i]=${COMPREPLY[$i]#"$colonprefixes"}
-    done
-} &&
 complete -F _gradle gradle
 complete -F _gradle gradlew
 complete -F _gradle ./gradlew
